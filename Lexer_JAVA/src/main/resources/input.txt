@@ -1,0 +1,5 @@
+import java.util.List;
+
+class Token {
+    public static int a = 10;
+}
