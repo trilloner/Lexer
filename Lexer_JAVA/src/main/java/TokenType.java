@@ -1,8 +1,11 @@
 public enum TokenType {
-    START,
+    NO_TYPE,
     IDENTIFIER,
     COMMENT,
     KEYWORD,
     SEPARATOR,
-    NUMBER
+    NUMBER,
+    OPERATOR,
+    STRING,
+    ERROR
 }
