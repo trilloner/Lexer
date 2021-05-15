@@ -1,0 +1,2 @@
+public enum States {START, WHITESPACE, COMMENT, NUMBER, OPERATOR, MINUS}
+
