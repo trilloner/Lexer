@@ -1,2 +1,10 @@
+String a = "asdfl;fslsp3-3'";
 
-int v -=12;
+/*
+sdfsdf
+sdf
+s;
+*/
+
+//qw113;
+

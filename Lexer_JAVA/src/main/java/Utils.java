@@ -11,7 +11,7 @@ public class Utils {
     }
 
     static boolean isSeparator(char input) {
-        Character[] separators = new Character[]{'{', '}', '[', ']', ';', ':', '"', ',', '/', ' ', '\t', '(', ')', '.'};
+        Character[] separators = new Character[]{'{', '}', '[', ']', ';', ':', '"', ',', ' ', '\t', '(', ')', '.'};
         return Arrays.stream(separators)
                 .anyMatch(character -> input == character);
     }
