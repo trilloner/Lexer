@@ -1,10 +1,59 @@
-String a = "asdfl;fslsp3-3'";
-
-/*
-sdfsdf
-sdf
-s;
+10.5 + 5;
+1 + 1;
+class A
+}
+'c';
+'\n';
+'fr';
+"check";
+true;
+a += 1;
+a < b;
+/* ejkfhje* sdefrf
 */
+//hfhfhhfh
+44er_9080;
+a /= b
+a != b
+:
+double a21223 = 1.;
+1.1.1
+123.3242.54.23
+//jhsd
++++
 
-//qw113;
-
+public class Token {
+    private String content;
+    private Type tokenType;
+    public Token(Type tokenType, String content){
+        this.content = content;
+        if(tokenType.equals(Type.IDENTIFIER)){
+            if(Patterns.isLiteral(content)){
+                this.tokenType = Type.LITERAL;
+            }
+            else
+            if(Patterns.isKeyword(content)){
+                this.tokenType = Type.KEYWORD;
+            }
+            else
+                this.tokenType = tokenType;
+        }  else
+            this.tokenType = tokenType;
+        if(tokenType.equals(Type.PUNCTUATION)){
+            switch (content) {
+                case "\n":
+                    this.content = "\\" + "n";
+                    break;
+                case "\t":
+                    this.content = "\\" + "t";
+                    break;
+            }
+        }
+    }
+    public Type getTokenType() {
+        return tokenType;
+    }
+    public String getContent() {
+        return content;
+    }
+}
