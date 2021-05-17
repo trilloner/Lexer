@@ -7,5 +7,6 @@ public enum TokenType {
     NUMBER,
     OPERATOR,
     STRING,
-    ERROR
+    ERROR,
+    CHARACTER
 }

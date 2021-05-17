@@ -7,11 +7,12 @@ public class Utils {
                 "enum", "extends", "final", "float", "for", "implements", "import", "instanceOf", "int", "interface", "long",
                 "native", "new", "package", "private", "protected", "public", "return", "short", "static", "strictfp",
                 "super", "synchronized", "this", "throw", "throws", "transient", "void", "volatile", "while", "goto", "const"};
-        return Arrays.asList(keywords).contains(input);
+        return Arrays.asList(keywords)
+                .contains(input);
     }
 
     static boolean isSeparator(char input) {
-        Character[] separators = new Character[]{'{', '}', '[', ']', ';', ':', '"', ',', ' ', '\t', '(', ')', '.'};
+        Character[] separators = new Character[]{'{', '}', '[', ']', ';', ':', '"', ',', ' ', '\t', '\n', '(', ')', '.', '\'', '@'};
         return Arrays.stream(separators)
                 .anyMatch(character -> input == character);
     }
