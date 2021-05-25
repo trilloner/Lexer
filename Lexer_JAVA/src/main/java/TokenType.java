@@ -1,12 +1,12 @@
 public enum TokenType {
-    NO_TYPE,
+
     IDENTIFIER,
-    COMMENT,
     KEYWORD,
-    SEPARATOR,
+    COMMENT,
     NUMBER,
+    SEPARATOR,
     OPERATOR,
     STRING,
-    ERROR,
-    CHARACTER
+    CHARACTER,
+    EXPONENTIAL, ERROR
 }

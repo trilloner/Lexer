@@ -1,4 +1,6 @@
+'\x1234';
 10.5 + 5;
+-100;
 1 + 1;
 class A
 }
@@ -12,16 +14,19 @@ a < b;
 /* ejkfhje* sdefrf
 */
 //hfhfhhfh
-44er_9080;
+er_9080;
 a /= b
 a != b
 :
 double a21223 = 1.;
 1.1.1
+1.5E3;
 123.3242.54.23
 //jhsd
 +++
-
+<<<
+>>>
+java.util.List;
 public class Token {
     private String content;
     private Type tokenType;

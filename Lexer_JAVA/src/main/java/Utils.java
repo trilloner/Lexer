@@ -21,6 +21,5 @@ public class Utils {
         Character[] operators = new Character[]{'-', '+', '=', '<', '>', '?', '!', '%', '&', '*', '^', '|', '/'};
         return Arrays.stream(operators)
                 .anyMatch(character -> input == character);
-
     }
 }

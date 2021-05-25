@@ -11,6 +11,12 @@ public enum States {
     SEPARATOR,
     DOT,
     LETTER,
-    CHARACTER, END_COMMENT,
+    CHARACTER,
+    END_COMMENT,
+    UNICODE_CHAR,
+    SPECIFIC_CHAR,
+    SECOND_OPERATOR,
+    ZERO,
+    EXPONENTIAL,
     ERROR
 }

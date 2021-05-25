@@ -1,18 +1,17 @@
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class Lexer {
     File file;
     StringBuilder buffer = new StringBuilder();
     ArrayList<Token> tokens;
     StateMachine stateMachine;
+    boolean isCharacter = false;
 
     public Lexer(String filename) {
         file = new File(filename);
@@ -35,63 +34,94 @@ public class Lexer {
         return tokens;
     }
 
-    private void analyzeChar(char character) {
+    private void analyzeChar(char input) {
 
 
         if (isCharacter()) {
 
-            processCharacter(character);
+            processCharacter(input);
 
         } else if (isComment()) {
 
-            processComment(character);
+            processComment(input);
 
         } else if (isString()) {
 
-            processString(character);
+            processString(input);
 
-        } else if (isLetter(character)) {
+        } else if (isLetter(input)) {
 
-            processLetter(character);
+            processLetter(input);
 
-        } else if (isDigit(character)) {
+        } else if (isDigit(input)) {
 
-            processDigit(character);
+            processDigit(input);
 
 
-        } else if (isWhitespace(character)) {
+        } else if (isWhitespace(input)) {
 
             processWhitespace();
 
-        } else if (isSeparator(character)) {
+        } else if (isSeparator(input)) {
 
-            processSeparator(character);
+            processSeparator(input);
 
 
-        } else if (isOperator(character)) {
+        } else if (isOperator(input)) {
 
-            processOperator(character);
+            processOperator(input);
 
         }
 
     }
 
     private void processCharacter(char character) {
+        States currentState = stateMachine.getCurrentState();
         if (character == '\'') {
-            if (buffer.length() == 1) {
+            if (buffer.length() == 1 || isUnicode() || currentState == States.SPECIFIC_CHAR) {
+                if (new String(buffer).equals("\\")) {
+                    tokens.add(createToken(TokenType.ERROR, new String(buffer)));
+                }
                 tokens.add(createToken(TokenType.CHARACTER, new String(buffer)));
-            } else {
-                tokens.add(createToken(TokenType.ERROR, new String(buffer)));
+            } else if (buffer.length() > 1) {
+                if (isCharacterNumber()) {
+                    tokens.add(createToken(TokenType.CHARACTER, new String(buffer)));
+                } else {
+                    tokens.add(createToken(TokenType.ERROR, new String(buffer)));
+                }
             }
             initBuffer();
             stateMachine.setCurrentState(States.START);
+            isCharacter = false;
+        } else if (character == 'u' && currentState == States.BACKSLASH) {
+            stateMachine.setCurrentState(States.UNICODE_CHAR);
+            buffer.append(character);
+        } else if (currentState == States.BACKSLASH && isSpecificSymbol(character)) {
+            stateMachine.setCurrentState(States.SPECIFIC_CHAR);
+            buffer.append(character);
+        } else if (character == '\\') {
+            stateMachine.setCurrentState(States.BACKSLASH);
+            buffer.append(character);
         } else {
             buffer.append(character);
         }
     }
 
+    private boolean isCharacterNumber() {
+        return new String(buffer).matches("\\\\[1-3][0-6][0-7]");
+    }
+
+    private boolean isSpecificSymbol(char input) {
+        Character[] symbols = {'n', 't', 'r', 'f', 'b', '\\'};
+        return Arrays.asList(symbols).contains(input);
+    }
+
+    private boolean isUnicode() {
+        return new String(buffer).matches("\\\\[u|U][1-9]{4}");
+    }
+
     private boolean isCharacter() {
-        return stateMachine.getCurrentState() == States.CHARACTER;
+        return isCharacter;
     }
 
     private void processComment(char character) {
@@ -103,11 +133,11 @@ public class Lexer {
                 stateMachine.setCurrentState(States.END_COMMENT);
             } else if (character == '/') {
                 if (currentState == States.END_COMMENT) {
+                    buffer.append(character);
                     tokens.add(createToken(TokenType.COMMENT, new String(buffer)));
                     stateMachine.setCurrentState(States.START);
                     initBuffer();
                 }
-
             }
             buffer.append(character);
         } else {
@@ -136,10 +166,6 @@ public class Lexer {
         States currentState = stateMachine.getCurrentState();
         States previousState = stateMachine.getPreviousState();
 
-        if (currentState == States.OPERATOR && previousState == States.OPERATOR) {
-            tokens.add(createToken(TokenType.ERROR, String.valueOf(operator)));
-            return;
-        }
 
         if (operator == '-') {
             if (currentState != States.NUMBER) {
@@ -155,15 +181,21 @@ public class Lexer {
                 stateMachine.setCurrentState(States.ONELINE_COMMENT);
             } else {
                 stateMachine.setCurrentState(States.BACKSLASH);
+                buffer.append(operator);
             }
         } else if (operator == '*') {
             if (stateMachine.getCurrentState() == States.BACKSLASH) {
                 stateMachine.setCurrentState(States.MULTILINE_COMMENT);
+                buffer.append(operator);
             }
+        } else if (currentState == States.OPERATOR) {
+            stateMachine.setCurrentState(States.SECOND_OPERATOR);
+            buffer.append(operator);
+            tokens.add(createToken(TokenType.OPERATOR, new String(buffer)));
+            initBuffer();
         } else {
             stateMachine.setCurrentState(States.OPERATOR);
-            tokens.add(createToken(TokenType.OPERATOR, String.valueOf(operator)));
-            initBuffer();
+            buffer.append(operator);
         }
 
     }
@@ -203,14 +235,25 @@ public class Lexer {
     }
 
     private void processLetter(char letter) {
+        States currentState = stateMachine.getCurrentState();
+        if (currentState == States.ZERO && letter == 'X' || letter == 'x') {
+            stateMachine.setCurrentState(States.NUMBER);
+        } else if (currentState == States.NUMBER && letter == 'E' || letter == 'e') {
+            stateMachine.setCurrentState(States.EXPONENTIAL);
+        } else {
+            stateMachine.setCurrentState(States.LETTER);
+        }
         buffer.append(letter);
-        stateMachine.setCurrentState(States.LETTER);
     }
 
     private void processDigit(char number) {
         States currentState = stateMachine.getCurrentState();
         if (currentState == States.LETTER) {
             stateMachine.setCurrentState(States.LETTER);
+        } else if (number == '0') {
+            stateMachine.setCurrentState(States.ZERO);
+        } else if (currentState == States.EXPONENTIAL) {
+            stateMachine.setCurrentState(States.EXPONENTIAL);
         } else {
             stateMachine.setCurrentState(States.NUMBER);
         }
@@ -224,6 +267,8 @@ public class Lexer {
             tokens.add(createToken(TokenType.KEYWORD, word));
         } else if (currentState == States.NUMBER) {
             tokens.add(createToken(TokenType.NUMBER, word));
+        } else if (currentState == States.OPERATOR || currentState == States.BACKSLASH) {
+            tokens.add(createToken(TokenType.OPERATOR, word));
         } else if (!word.equals("")) {
             tokens.add(createToken(TokenType.IDENTIFIER, word));
         }
@@ -235,7 +280,7 @@ public class Lexer {
         String word = new String(buffer);
         States currentState = stateMachine.getCurrentState();
 
-        if (currentState == States.DOT || occurrencesCount('.') > 1) {
+        if (occurrencesCount('.') > 1) {
             stateMachine.setCurrentState(States.START);
             tokens.add(createToken(TokenType.ERROR, new String(buffer)));
             initBuffer();
@@ -245,6 +290,7 @@ public class Lexer {
             return;
         } else if (separator == '\'') {
             stateMachine.setCurrentState(States.CHARACTER);
+            isCharacter = true;
             return;
         } else if (separator == '.' && currentState == States.NUMBER) {
             buffer.append(separator);
@@ -252,14 +298,24 @@ public class Lexer {
             return;
         } else if (Utils.isKeyword(word)) {
             tokens.add(createToken(TokenType.KEYWORD, word));
-        } else if (currentState == States.NUMBER) {
+        } else if (currentState == States.NUMBER || currentState == States.DOT) {
             tokens.add(createToken(TokenType.NUMBER, word));
+        } else if (currentState == States.EXPONENTIAL) {
+            if (isCorrectExponential()) {
+                tokens.add(createToken(TokenType.EXPONENTIAL, new String(buffer)));
+            } else {
+                tokens.add(createToken(TokenType.ERROR, new String(buffer)));
+            }
         } else if (!word.equals("")) {
             tokens.add(createToken(TokenType.IDENTIFIER, word));
         }
         tokens.add(createToken(TokenType.SEPARATOR, String.valueOf(separator)));
         stateMachine.setCurrentState(States.SEPARATOR);
         initBuffer();
+    }
+
+    private boolean isCorrectExponential() {
+        return new String(buffer).matches("\\d{1,}[e|E]\\d{1,255}");
     }
 
     private long occurrencesCount(char character) {
@@ -280,17 +336,17 @@ public class Lexer {
     public void printSortedTokens() {
         tokens.stream()
                 .sorted(new Comparator<Token>() {
-            @Override
-            public int compare(Token o1, Token o2) {
-                if (o1.getType() == o2.getType() && o1.getValue().equals(o2.getValue())) {
-                    return 0;
-                } else if (o1.getType().ordinal() >= o2.getType().ordinal()) {
-                    return 1;
-                }
-                return -1;
-
-            }
-        })
+                    @Override
+                    public int compare(Token o1, Token o2) {
+                        if (o1.getType().ordinal() == o2.getType().ordinal()) {
+                            return 0;
+                        } else if (o1.getType().ordinal() > o2.getType().ordinal()) {
+                            return 1;
+                        } else {
+                            return -1;
+                        }
+                    }
+                })
                 .forEach(System.out::println);
     }
 }

@@ -1,4 +1,4 @@
-public class Token {
+public class Token implements Comparable<Token> {
     private TokenType type;
     private String value;
 
@@ -29,6 +29,12 @@ public class Token {
                 "type=" + type +
                 ", value='" + value + '\'' +
                 '}';
+    }
+
+    @Override
+    public int compareTo(Token o) {
+
+        return 0;
     }
 }
 
